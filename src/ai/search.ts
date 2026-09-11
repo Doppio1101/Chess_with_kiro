@@ -44,6 +44,11 @@ export interface SearchResult {
 // A random source can be injected for deterministic tests; defaults to Math.random.
 export type RandomFn = () => number;
 
+// Hard ply cap for quiescence search. Captures/promotions already make material
+// strictly decrease so quiescence terminates on its own; this bound is a
+// defensive backstop so termination never depends solely on the movetime clock.
+const QUIESCENCE_MAX_PLY = 64;
+
 // Transposition table entry bound types.
 const enum Bound {
   Exact = 0,
@@ -134,6 +139,10 @@ class Searcher {
   // recapture (the horizon effect).
   private quiescence(alpha: number, beta: number, ply: number): number {
     if (this.timeUp()) return alpha;
+    // Defensive hard ply bound: captures already make material strictly
+    // decrease so quiescence terminates naturally, but this backstop guarantees
+    // termination independent of the movetime clock (e.g. under an absurd cap).
+    if (ply >= QUIESCENCE_MAX_PLY) return evaluate(this.board);
     this.nodes++;
 
     const standPat = evaluate(this.board);

@@ -18,7 +18,6 @@ import {
   Difficulty,
   DIFFICULTY_ORDER,
   DIFFICULTIES,
-  difficultyForElo,
 } from '../ai/difficulty.js';
 import { Storage } from './storage.js';
 
@@ -104,10 +103,11 @@ export function eloForTier(tier: Difficulty): number {
   return DIFFICULTIES[tier].approxElo;
 }
 
-// The tier whose anchor Elo is CLOSEST to `elo` (ties resolved to the stronger
-// tier). Note this differs from difficulty.ts's `difficultyForElo`, which picks
-// the strongest tier at-or-below the Elo; `tierForElo` picks nearest by
-// absolute distance, which is the natural round-trip inverse of `eloForTier`.
+// The CANONICAL Elo -> tier mapping: the tier whose anchor Elo is CLOSEST to
+// `elo` (ties resolved to the stronger tier). This is the single mapping used by
+// the live auto-difficulty path and the natural round-trip inverse of
+// `eloForTier`. (An earlier "strongest at-or-below" variant was removed so that
+// no second, disagreeing mapping can be picked by mistake.)
 export function tierForElo(elo: number): Difficulty {
   let best: Difficulty = DIFFICULTY_ORDER[0];
   let bestDist = Infinity;
@@ -120,9 +120,6 @@ export function tierForElo(elo: number): Difficulty {
   }
   return best;
 }
-
-// Re-export the at-or-below mapping for callers that want it under this module.
-export { difficultyForElo };
 
 // --- Persistence helpers ----------------------------------------------------
 //

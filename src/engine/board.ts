@@ -228,7 +228,32 @@ export class Board {
     return `${placement} ${this.turn} ${castle} ${ep} ${this.halfmove} ${this.fullmove}`;
   }
 
+  // Whether an en-passant capture is actually available for the side to move.
+  //
+  // FIDE treats two positions as identical (for threefold repetition) only when
+  // the *possibility* of en passant is the same. `epSquare` is set on every
+  // double push, but a capture is only possible when the side to move has a pawn
+  // positioned to capture onto that square. When there is no such pawn the ep
+  // square is a "phantom" that must NOT distinguish positions.
+  epCaptureAvailable(): boolean {
+    if (this.epSquare === -1) return false;
+    // The capturing pawns belong to the side to move and sit on the two squares
+    // diagonally "behind" the ep target (relative to their advance direction).
+    // White captures upward, so a white capturer is one rank below the ep square;
+    // black captures downward, so a black capturer is one rank above it.
+    const capturer = makePiece(this.turn, PieceType.Pawn);
+    const back = this.turn === 'w' ? -16 : 16;
+    for (const side of [-1, 1]) {
+      const from = this.epSquare + back + side;
+      if (onBoard(from) && this.squares[from] === capturer) return true;
+    }
+    return false;
+  }
+
   // A compact position key for repetition detection: placement + turn + castling + ep.
+  // The ep square is only encoded when an en-passant capture is actually
+  // available; otherwise a phantom ep square would wrongly distinguish
+  // otherwise-identical positions and cause valid threefold draws to be missed.
   positionKey(): string {
     let key = '';
     for (let rank = 7; rank >= 0; rank--) {
@@ -237,7 +262,8 @@ export class Board {
         key += ',';
       }
     }
-    key += this.turn + '|' + this.castling + '|' + this.epSquare;
+    const epKey = this.epCaptureAvailable() ? this.epSquare : -1;
+    key += this.turn + '|' + this.castling + '|' + epKey;
     return key;
   }
 
@@ -277,7 +303,6 @@ export class Board {
     const to = move.to;
 
     // Reset EP square; set later if double push.
-    const prevEp = this.epSquare;
     this.epSquare = -1;
 
     // Halfmove clock: reset on pawn move or capture.
@@ -335,7 +360,6 @@ export class Board {
     if (this.turn === 'b') this.fullmove++;
     this.turn = this.turn === 'w' ? 'b' : 'w';
 
-    void prevEp;
     this.history.push(undo);
   }
 

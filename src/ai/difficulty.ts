@@ -103,13 +103,9 @@ export function configFor(level: Difficulty): DifficultyConfig {
   return DIFFICULTIES[level];
 }
 
-// Map an Elo rating to the closest tier (used by the auto-difficulty mode).
-// Chooses the strongest tier whose approxElo does not exceed the player's Elo,
-// so improving players are matched against progressively stronger opponents.
-export function difficultyForElo(elo: number): Difficulty {
-  let chosen: Difficulty = DIFFICULTY_ORDER[0];
-  for (const level of DIFFICULTY_ORDER) {
-    if (elo >= DIFFICULTIES[level].approxElo) chosen = level;
-  }
-  return chosen;
-}
+// NOTE: The canonical Elo -> tier mapping is `tierForElo` in src/elo/rating.ts.
+// It picks the tier whose anchor Elo is *nearest* the player's rating and is the
+// single function on the live auto-difficulty path (see src/elo/autoDifficulty.ts).
+// An earlier "strongest tier at-or-below" variant (`difficultyForElo`) was
+// removed to avoid two mappings that disagree; use `tierForElo` for all Elo->tier
+// decisions.

@@ -9,9 +9,9 @@ import {
   DIFFICULTY_ORDER,
   configFor,
   paramsFor,
-  difficultyForElo,
   Difficulty,
 } from '../src/ai/difficulty.js';
+import { tierForElo } from '../src/elo/rating.js';
 
 test('exactly five tiers in weakest-to-strongest order', () => {
   assert.strictEqual(DIFFICULTY_ORDER.length, 5);
@@ -90,20 +90,22 @@ test('paramsFor mirrors the config values', () => {
   }
 });
 
-test('difficultyForElo maps ratings to the right tier', () => {
-  // Below the weakest tier's approxElo still yields the weakest tier.
-  assert.strictEqual(difficultyForElo(0), 'practice');
-  assert.strictEqual(difficultyForElo(500), 'practice');
-  assert.strictEqual(difficultyForElo(1000), 'beginner');
-  assert.strictEqual(difficultyForElo(1399), 'beginner');
-  assert.strictEqual(difficultyForElo(1400), 'intermediate');
-  assert.strictEqual(difficultyForElo(1800), 'advanced');
-  assert.strictEqual(difficultyForElo(2200), 'pro');
-  assert.strictEqual(difficultyForElo(3000), 'pro');
+test('tierForElo (canonical mapping) picks the nearest tier', () => {
+  // Anchors: practice 600, beginner 1000, intermediate 1400, advanced 1800, pro 2200.
+  // Below the weakest tier's anchor still yields the weakest tier.
+  assert.strictEqual(tierForElo(0), 'practice');
+  assert.strictEqual(tierForElo(500), 'practice');
+  assert.strictEqual(tierForElo(1000), 'beginner');
+  // 1399 is nearest to intermediate's 1400 anchor, not beginner's 1000.
+  assert.strictEqual(tierForElo(1399), 'intermediate');
+  assert.strictEqual(tierForElo(1400), 'intermediate');
+  assert.strictEqual(tierForElo(1800), 'advanced');
+  assert.strictEqual(tierForElo(2200), 'pro');
+  assert.strictEqual(tierForElo(3000), 'pro');
   // Monotonic: higher Elo never maps to a weaker tier.
   let prevIdx = -1;
   for (let elo = 0; elo <= 3000; elo += 100) {
-    const level = difficultyForElo(elo) as Difficulty;
+    const level = tierForElo(elo) as Difficulty;
     const idx = DIFFICULTY_ORDER.indexOf(level);
     assert.ok(idx >= prevIdx, `elo ${elo}: tier index must be non-decreasing`);
     prevIdx = idx;

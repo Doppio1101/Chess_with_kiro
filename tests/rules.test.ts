@@ -104,6 +104,55 @@ test('cannot castle through check', () => {
   assert.ok(targets.has('c1'), 'queen-side still allowed');
 });
 
+test('phantom en-passant square does not distinguish position keys (FIDE fidelity)', () => {
+  // Two positions identical except that one carries an ep square that no enemy
+  // pawn can actually capture onto. Under FIDE they are the SAME position, so
+  // their position keys must be equal (otherwise threefold can be under-counted).
+  const withPhantomEp = Board.fromFEN('4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1');
+  const withoutEp = Board.fromFEN('4k3/8/8/3pP3/8/8/8/4K3 w - - 0 1');
+  // The white pawn on e5 CAN capture onto d6, so this ep is real, keys differ.
+  assert.notStrictEqual(withPhantomEp.positionKey(), withoutEp.positionKey());
+
+  // Now a genuine phantom: black pawn far away, ep square a6 with no capturer.
+  const phantom = Board.fromFEN('4k3/8/8/p7/8/8/8/4K3 w - a6 0 1');
+  const plain = Board.fromFEN('4k3/8/8/p7/8/8/8/4K3 w - - 0 1');
+  assert.strictEqual(
+    phantom.positionKey(),
+    plain.positionKey(),
+    'a phantom (uncapturable) ep square must not distinguish positions',
+  );
+  assert.strictEqual(phantom.epCaptureAvailable(), false);
+});
+
+test('threefold repetition fires despite a phantom ep square in the history', () => {
+  // A double push with no adjacent enemy pawn leaves a phantom ep square. The
+  // position it produces must count as identical to the same layout reached
+  // without that phantom, so a legitimate threefold draw is detected.
+  const keys: string[] = [];
+
+  // Position reached via a double push (phantom ep square set on the board).
+  const viaDoublePush = Board.fromFEN('4k3/8/8/8/3P4/8/8/4K3 b - d3 0 1');
+  // The same layout with no ep square (e.g. reached by other move orders).
+  const noEp = Board.fromFEN('4k3/8/8/8/3P4/8/8/4K3 b - - 0 1');
+
+  // Three occurrences of the (FIDE-)identical position, one of which carries the
+  // phantom ep square. Before the fix the phantom key differed and this counted
+  // as only two identical positions, so the draw was missed.
+  keys.push(noEp.positionKey());
+  keys.push(viaDoublePush.positionKey());
+  keys.push(noEp.positionKey());
+
+  assert.strictEqual(
+    viaDoublePush.positionKey(),
+    noEp.positionKey(),
+    'phantom ep square must not change the key',
+  );
+  const b = Board.fromFEN('4k3/8/8/8/3P4/8/8/4K3 b - - 0 1');
+  const result = getGameResult(b, keys);
+  assert.strictEqual(result.status, 'draw');
+  assert.strictEqual(result.reason, 'threefold repetition');
+});
+
 test('make/undo round-trips the FEN', () => {
   const fen = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1';
   const b = Board.fromFEN(fen);
