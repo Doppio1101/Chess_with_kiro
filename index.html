@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Chess with Kiro</title>
+    <meta name="description" content="Play chess against a hand-written alpha-beta AI. Five difficulty tiers plus an Elo-based auto mode. Fully offline, installable as a PWA." />
+    <meta name="theme-color" content="#2b2b2b" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="icon.svg" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Chess with Kiro</h1>
+      <p class="tagline">Play a hand-written chess AI &mdash; five tiers plus Elo auto mode.</p>
+    </header>
+
+    <main class="app">
+      <section class="board-wrap" aria-label="Chessboard">
+        <div id="board" class="board"></div>
+      </section>
+
+      <aside class="panel">
+        <section id="controls" class="controls" aria-label="Game controls">
+          <div class="field">
+            <label for="difficulty">Difficulty</label>
+            <select id="difficulty"></select>
+          </div>
+          <div class="field">
+            <label for="side">Play as</label>
+            <select id="side">
+              <option value="w">White</option>
+              <option value="b">Black</option>
+            </select>
+          </div>
+          <button id="new-game" type="button" class="primary">New game</button>
+          <p id="status" class="status" data-tone="ongoing">White to move</p>
+        </section>
+
+        <section id="stats" class="stats" aria-label="Player statistics">
+          <h2>Your stats</h2>
+          <dl class="stat-grid">
+            <div><dt>Elo</dt><dd id="stat-elo">1000</dd></div>
+            <div><dt>Wins</dt><dd id="stat-wins">0</dd></div>
+            <div><dt>Losses</dt><dd id="stat-losses">0</dd></div>
+            <div><dt>Draws</dt><dd id="stat-draws">0</dd></div>
+            <div><dt>Games</dt><dd id="stat-games">0</dd></div>
+          </dl>
+          <p id="stat-tier" class="matched-tier" hidden></p>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Offline AI: a hand-written alpha-beta engine (strong club level). Grandmaster/Stockfish
+        strength needs a WASM engine download that this offline build cannot fetch. See the README.
+      </p>
+    </footer>
+
+    <script type="module" src="dist/ui/main.js"></script>
+  </body>
+</html>
