@@ -1,0 +1,12 @@
+{
+  "name": "chess-with-kiro",
+  "version": "0.1.0",
+  "description": "Dependency-free TypeScript chess engine and AI web app.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:tests": "tsc -p tsconfig.tests.json",
+    "test": "tsc -p tsconfig.tests.json && node --test 'dist-tests/tests/**/*.test.js'"
+  }
+}
