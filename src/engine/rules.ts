@@ -8,7 +8,6 @@ import {
   EMPTY,
   pieceType,
   pieceColor,
-  isWhite,
   fileOf,
   rankOf,
   makeSquare,
@@ -122,6 +121,3 @@ export function getGameResult(board: Board, positionKeys?: string[]): GameResult
 
   return { status: 'ongoing' };
 }
-
-// Suppress unused import warning for isWhite (kept for API completeness).
-void isWhite;
